@@ -19,7 +19,6 @@ This project is an automated ETL (Extract, Transform, Load) pipeline that tracks
 
 ## ⚙️ How to Run
 1. **Clone the repository:**
-   ```bash
    git clone git@github.com:nguyenphucptitd24/vdt-crypto-etl.git
 Install dependencies:
 pip install requests pandas streamlit
