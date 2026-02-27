@@ -4,6 +4,9 @@
 ## 📌 Project Overview
 This project is an automated ETL (Extract, Transform, Load) pipeline that tracks real-time cryptocurrency prices. It demonstrates the ability to handle data flows from APIs to a local database and visualize it through a web dashboard.
 
+**🔗 Live Demo:** [Click here to view my Crypto Dashboard](https://pseudoparasitic-vanita-undefinite.ngrok-free.dev)
+*(Note: Only active when my local server is running)*
+
 ## 🛠 Tech Stack
 * **Language:** Python 3.x
 * **Data Processing:** Pandas (using Vectorization for performance)

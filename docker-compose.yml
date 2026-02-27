@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  # 1. Database
+  db:
+    image: postgres:15-alpine
+    container_name: crypto_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: vdt_admin
+      POSTGRES_PASSWORD: vdt_password123
+      POSTGRES_DB: crypto_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  # 2. Streamlit
+  app:
+    build: .
+    container_name: crypto_app
+    restart: always
+    ports:
+      - "8501:8501"
+    depends_on:
+      - db
+
+  # 3. Worker
+  worker:
+    build: .
+    container_name: crypto_worker
+    command: python ingest.py
+    restart: always
+    depends_on:
+      - db
+
+volumes:
+  pgdata:

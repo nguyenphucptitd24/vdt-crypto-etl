@@ -1,29 +1,45 @@
 import requests
 import pandas as pd
-import sqlite3
+from sqlalchemy import create_engine
+from datetime import datetime
+import time
 
-# Bước 1: Lấy dữ liệu từ API CoinGecko
-url = "https://api.coingecko.com/api/v3/coins/markets"
+# 1. Khai báo chuỗi kết nối đến két sắt PostgreSQL
+DB_URL = "postgresql://vdt_admin:vdt_password123@db:5432/crypto_db"
 
-params = {
-    "vs_currency": "usd",
-    "order": "market_cap_desc",
-    "per_page": 100,
-    "page": 1,
-    "sparkline": False,
-}
+# 2. Tạo "động cơ" kết nối
+engine = create_engine(DB_URL)
 
-response = requests.get(url, params=params)
-data = response.json()
 
-# Bước 2: Làm sạch dữ liệu và chọn các cột cần thiết
-df = pd.DataFrame(data)
-df_clean = df[["id", "symbol", "name", "current_price", "market_cap", "total_volume"]]
-print("Dữ liệu sau khi làm sạch:")
-print(df_clean)
+def fetch_crypto_data():
+    url = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd"
+    response = requests.get(url)
+    data = response.json()
 
-# Lưu dữ liệu vào cơ sở dữ liệu SQLite
-conn = sqlite3.connect("crypto_data.db")
-df_clean.to_sql("crypto_markets", conn, if_exists="replace", index=False)
-conn.close()
-print("Dữ liệu đã được lưu vào cơ sở dữ liệu SQLite.")
+    df = pd.DataFrame(
+        {
+            "timestamp": [datetime.now()],
+            "bitcoin_usd": [data["bitcoin"]["usd"]],
+            "ethereum_usd": [data["ethereum"]["usd"]],
+        }
+    )
+    return df
+
+
+def save_to_postgres(df):
+    # Pandas tự động dịch Dataframe thành lệnh SQL và nhét vào PostgreSQL
+    df.to_sql("crypto_prices", engine, if_exists="append", index=False)
+    print(f"[{datetime.now()}] Đã hút dữ liệu và lưu vào PostgreSQL thành công!")
+
+
+if __name__ == "__main__":
+    print("Bắt đầu tiến trình ETL hút dữ liệu Crypto tự động...")
+    while True:
+        try:
+            df = fetch_crypto_data()
+            save_to_postgres(df)
+        except Exception as e:
+            print(f"Lỗi hệ thống: {e}")
+
+        # Tự động nghỉ 60 giây rồi hút tiếp
+        time.sleep(60)

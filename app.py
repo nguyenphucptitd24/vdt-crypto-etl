@@ -1,31 +1,47 @@
 import streamlit as st
 import pandas as pd
-import sqlite3
+from sqlalchemy import create_engine
+import time
 
-# 1. cấu hình trang web
-st.set_page_config(page_title="Crypto Dashboard", layout="wide")
-st.title("VDT Crypto Price Tracker")
-st.markdown("Dashboard hiển thị giá tiền điện tử trực tiếp từ Database SQLite.")
+# 1. Khai báo chìa khóa mở két sắt (Giống hệt bên ingest.py)
+DB_URL = "postgresql://vdt_admin:vdt_password123@db:5432/crypto_db"
+engine = create_engine(DB_URL)
+
+st.set_page_config(page_title="VDT Crypto Dashboard", layout="wide")
+st.title("📈 Biểu đồ Giá Crypto Trực Tuyến (PostgreSQL)")
 
 
-# 2. Kết nối đến cơ sở dữ liệu SQLite và lấy dữ liệu
-@st.cache_data
+# 2. Hàm chui xuống hầm lấy dữ liệu
 def load_data():
-    conn = sqlite3.connect("crypto_data.db")
-    query = "SELECT * FROM crypto_markets"
-    df = pd.read_sql_query(query, conn)
+    # Lấy 100 dòng dữ liệu mới nhất
+    query = "SELECT * FROM crypto_prices ORDER BY timestamp DESC LIMIT 100"
+    df = pd.read_sql(query, engine)
     return df
 
 
-# Lấy dữ liệu ra biến df
-df = load_data()
+# Tạo một không gian trống để hình ảnh tự động làm mới
+placeholder = st.empty()
 
-# 3. Hiển trị bảng dữ liệu trên web
-st.subheader("Dữ liệu giá tiền điện tử")
-st.dataframe(df)
+# 3. Vòng lặp liên tục cập nhật giao diện
+while True:
+    try:
+        df = load_data()
 
-# 4. Trích xuất và vẽ biểu đồ
-st.subheader("📈 Top 10 Đồng Coin có Vốn Hóa (Market Cap) lớn nhất")
-top_10_df = df.sort_values(by="market_cap", ascending=False).head(10)
-display_df = top_10_df.rename(columns={"symbol": "SYMBOL", "market_cap": "MARKET_CAP"})
-st.bar_chart(data=display_df, x="SYMBOL", y="MARKET_CAP")
+        # Nếu đã có dữ liệu thì vẽ biểu đồ
+        if not df.empty:
+            with placeholder.container():
+                col1, col2 = st.columns(2)
+                col1.metric("Giá Bitcoin (USD)", f"${df['bitcoin_usd'].iloc[0]:,.2f}")
+                col2.metric("Giá Ethereum (USD)", f"${df['ethereum_usd'].iloc[0]:,.2f}")
+
+                # Vẽ biểu đồ đường
+                st.line_chart(
+                    df.set_index("timestamp")[["bitcoin_usd", "ethereum_usd"]]
+                )
+        else:
+            placeholder.warning("Két sắt đang trống. Đợi hệ thống hút dữ liệu...")
+
+    except Exception as e:
+        placeholder.error(f"Đang kết nối Database... Vui lòng đợi. Lỗi: {e}")
+
+    time.sleep(5)  # Cứ 5 giây là tải lại giao diện 1 lần
