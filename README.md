@@ -1,38 +1,47 @@
-# 🚀 Crypto ETL Pipeline & Dashboard
-**A personal project for Viettel Digital Talent 2026 - Data Engineer Track**
+# 🚀 Real-time Crypto ETL Pipeline & Dashboard
 
-## 📌 Project Overview
-This project is an automated ETL (Extract, Transform, Load) pipeline that tracks real-time cryptocurrency prices. It demonstrates the ability to handle data flows from APIs to a local database and visualize it through a web dashboard.
+A complete and automated Data Pipeline system that extracts live cryptocurrency prices, transforms the data, ensures persistent storage, and visualizes the trends through an interactive dashboard. The entire project is containerized using Docker, adhering to a Microservices architecture.
 
-**🔗 Live Demo:** [Click here to view my Crypto Dashboard](https://pseudoparasitic-vanita-undefinite.ngrok-free.dev)
-*(Note: Only active when my local server is running)*
+## 🛠️ Tech Stack & Architecture
 
-## 🛠 Tech Stack
-* **Language:** Python 3.x
-* **Data Processing:** Pandas (using Vectorization for performance)
-* **Database:** SQLite
-* **Visualization:** Streamlit
-* **API:** CoinGecko API
+The system is designed with independent services communicating within a containerized network:
 
-## ✨ Key Features
-* **Extract:** Automatically fetch top 10 cryptocurrencies' prices (BTC, ETH, etc.) via Requests.
-* **Transform:** Clean and format data using Pandas (handling Market Cap, Volume).
-* **Load:** Store historical data into a structured SQLite database.
-* **Visualize:** Interactive dashboard showing real-time price tables and Market Cap bar charts.
+- **Core Language:** Python 3
+- **Extract & Transform (ETL):** `pandas` and `requests` (Interacting with CoinGecko REST API).
+- **Load (Database):** PostgreSQL (Configured with Docker Volumes to ensure data persistence).
+- **Visualization (BI/Dashboard):** Streamlit.
+- **Deployment & Infrastructure:** Docker & Docker Compose.
 
-## ⚙️ How to Run
-1. **Clone the repository:**
-   git clone git@github.com:nguyenphucptitd24/vdt-crypto-etl.git
-Install dependencies:
-pip install requests pandas streamlit
+## ⚙️ How to Run (Local Environment)
 
-Run the ingestion script (Collect data):
-python ingest.py
+Since the entire application is containerized, you do not need to manually install Python dependencies or configure a local database server. Ensure you have **Docker** and **Docker Compose** installed on your machine.
 
-Launch the Dashboard:
-streamlit run app.py
+1. **Clone this repository:**
+   git clone https://github.com/nguyenphucptitd24/vdt-crypto-etl.git
+   cd vdt-crypto-etl
 
-👨‍💻 Author
-Nguyen Phuc - 2nd year IT Student at PTIT (High-quality Program)
-Expected Graduation: 2028
-Target: Viettel Digital Talent 2026
+2. **Build and spin up the microservices:**
+
+docker-compose up -d --build
+
+3. **Access the application:**
+
+- Open your web browser and navigate to the Streamlit Dashboard: `http://localhost:8501`
+- The background worker will continuously fetch and update the live crypto data into the database.
+
+4. **Tear down the system:**
+
+docker-compose down
+
+## 📈 Future Scope & Roadmap
+
+This project currently serves as an MVP (Minimum Viable Product) to demonstrate a functional data engineering pipeline. To meet Enterprise-level standards, the following architectural upgrades are planned:
+
+- **Workflow Orchestration:** Integrate **Apache Airflow** to replace background scripts, enabling robust DAG scheduling, failure retries, and automated alerting.
+- **Real-time Streaming:** Introduce **Apache Kafka** as a Message Broker to decouple data ingestion and processing, handling high-throughput streams efficiently.
+- **AI & Sentiment Analysis:** Utilize a local LLM (e.g., Ollama) to scrape and summarize market news, combining sentiment scores with price data for predictive analytics.
+- **Cloud Migration:** Deploy the infrastructure to AWS (EC2, RDS) or GCP for High Availability (HA) and better scalability.
+
+## 👨‍💻 Author
+
+**Nguyen Hong Phuc**
