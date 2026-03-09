@@ -1,45 +1,42 @@
+import os
 import requests
-import pandas as pd
-from sqlalchemy import create_engine
-from datetime import datetime
-import time
+from dotenv import load_dotenv
 
-# 1. Khai báo chuỗi kết nối đến két sắt PostgreSQL
-DB_URL = "postgresql://vdt_admin:vdt_password123@db:5432/crypto_db"
-
-# 2. Tạo "động cơ" kết nối
-engine = create_engine(DB_URL)
+load_dotenv()
 
 
-def fetch_crypto_data():
-    url = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd"
-    response = requests.get(url)
-    data = response.json()
+def get_crypto_data():
+    api_key = os.getenv("CRYPTO_API_KEY")
 
-    df = pd.DataFrame(
-        {
-            "timestamp": [datetime.now()],
-            "bitcoin_usd": [data["bitcoin"]["usd"]],
-            "ethereum_usd": [data["ethereum"]["usd"]],
-        }
-    )
-    return df
+    if not api_key:
+        print("Lỗi: Không tìm thấy CRYPTO_API_KEY trong file .env hoặc hệ thống!")
+        return None
 
+    url = "https://api.coingecko.com/api/v3/coins/markets"
+    params = {
+        "vs_currency": "usd",
+        "order": "market_cap_desc",
+        "per_page": 10,
+        "page": 1,
+        "sparkline": False,
+    }
 
-def save_to_postgres(df):
-    # Pandas tự động dịch Dataframe thành lệnh SQL và nhét vào PostgreSQL
-    df.to_sql("crypto_prices", engine, if_exists="append", index=False)
-    print(f"[{datetime.now()}] Đã hút dữ liệu và lưu vào PostgreSQL thành công!")
+    headers = {"x-access-token": api_key, "accept": "application/json"}
+
+    try:
+        response = requests.get(url, params=params, headers=headers)
+        response.raise_for_status()
+        data = response.json()
+
+        print("Dữ liệu đã được tải thành công!")
+        return data
+
+    except requests.exceptions.RequestException as e:
+        print(f"Đã xảy ra lỗi khi gọi API: {e}")
+        return None
 
 
 if __name__ == "__main__":
-    print("Bắt đầu tiến trình ETL hút dữ liệu Crypto tự động...")
-    while True:
-        try:
-            df = fetch_crypto_data()
-            save_to_postgres(df)
-        except Exception as e:
-            print(f"Lỗi hệ thống: {e}")
-
-        # Tự động nghỉ 60 giây rồi hút tiếp
-        time.sleep(60)
+    data = get_crypto_data()
+    if data:
+        print(data[:1])

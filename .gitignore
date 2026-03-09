@@ -1,6 +1,8 @@
-__pycache__/
-.venv/
 .env
-*.db
-pgdata/
-ngrok.exe
+
+__pycache__/
+*.py[cod]
+*$py.class
+
+venv/
+.venv/
